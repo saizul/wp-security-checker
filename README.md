@@ -20,7 +20,8 @@ hardening, as a console table, JSON or a self-contained HTML report.
 - Retry with exponential backoff (honours `Retry-After`), timeouts, a polite
   delay between requests and the `wp-security-checker` User-Agent.
 - Severity levels: critical, high, medium, low, info.
-- Output: rich table, `--json`, `--html report.html` (with a severity summary).
+- Output: rich table, `--json`, `--html report.html` (with a severity summary),
+  and `--sarif results.sarif` for GitHub code scanning.
 - `--baseline previous.json` diffs a run against an earlier JSON run and shows
   what is new, resolved or unchanged.
 - CI friendly exit codes with `--fail-on`.
@@ -58,12 +59,14 @@ Requires Python 3.9+.
 wp-security-check https://example.com
 wp-security-check https://example.com --json > run1.json
 wp-security-check https://example.com --html report.html
+wp-security-check https://example.com --sarif results.sarif
 wp-security-check https://example.com --baseline run1.json --fail-on medium
 wp-security-check https://example.com --only xmlrpc,security-headers
 wp-security-check https://example.com --skip login-url --config wp-security-checker.yml
 ```
 
-Options: `--config`, `--json`, `--html PATH`, `--baseline PATH`, `--only`,
+Options: `--config`, `--json`, `--html PATH`, `--sarif PATH`,
+`--sarif-location FILE`, `--baseline PATH`, `--only`,
 `--skip`, `--list-checks`, `--delay`, `--timeout`, `--retries`, `--fail-on`,
 `--version`.
 
@@ -110,6 +113,49 @@ Illustrative output from a mocked site:
 │ PASS   │ -        │ Author enumeration not possible via ?author= │                                                 │
 └────────┴──────────┴──────────────────────────────────────────────┴─────────────────────────────────────────────────┘
 Failed: 9 (0 critical, 1 high, 2 medium, 6 low) | Passed: 6
+```
+
+## GitHub code scanning (SARIF)
+
+`--sarif PATH` writes a [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/) file
+next to the normal output. Only failing findings are reported. Severities map to SARIF
+levels (`critical`/`high` -> error, `medium` -> warning, `low`/`info` -> note) and to
+GitHub's `security-severity` score, and each finding has a stable fingerprint so repeat
+scans update the same alert. With `--baseline`, results carry `baselineState`
+(`new` or `unchanged`).
+
+A site scan has no source file, so every result points at one file in the repository
+that uploads the report (`README.md` by default; change it with `--sarif-location`).
+
+Example workflow that scans nightly and uploads the results:
+
+```yaml
+name: wp-security-check
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install git+https://github.com/saizul/wp-security-checker.git
+      - name: Scan (only sites you own)
+        run: wp-security-check https://example.com --sarif results.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+          category: wp-security-check
 ```
 
 ## Configuration

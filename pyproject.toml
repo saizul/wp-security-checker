@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wp-security-checker"
+version = "0.2.0"
+description = "Passive, non-intrusive security checks for WordPress sites you own."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Saizul Amin" }]
+keywords = ["wordpress", "security", "audit", "cli", "headers"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Topic :: Security",
+]
+dependencies = [
+    "requests>=2.28",
+    "beautifulsoup4>=4.11",
+    "rich>=13.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "responses>=0.23", "ruff>=0.4"]
+
+[project.urls]
+Homepage = "https://saizul.com"
+
+[project.scripts]
+wp-security-check = "wp_security_checker.cli:main"
+
+[project.entry-points."wp_security_checker.checks"]
+# Third-party packages can expose extra checks here. The target is either a
+# module (imported for its @register side effects) or a callable(registry).
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["UP006", "UP007", "UP035", "UP045"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+"src/wp_security_checker/report.py" = ["E501"]

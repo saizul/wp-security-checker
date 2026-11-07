@@ -1,0 +1,31 @@
+# Example configuration. Pass it with: wp-security-check <url> --config this-file.yml
+http:
+  user_agent: wp-security-checker
+  timeout: 10      # seconds per request
+  delay: 0.5       # minimum pause between requests
+  retries: 2       # retries on timeouts, connection errors, 429 and 5xx
+  backoff: 0.5     # base for exponential backoff (0.5s, 1s, 2s, ...)
+
+checks:
+  wp-version:
+    enabled: true
+    check_readme: true
+  xmlrpc:
+    enabled: true
+    severity: high          # override the severity reported for this check
+  rest-users:
+    enabled: true
+  author-enum:
+    enabled: false          # shorthand "author-enum: false" also works
+  directory-listing:
+    paths: ["wp-content/uploads/", "wp-content/plugins/"]
+  sensitive-files:
+    extra_paths: ["backup.zip", "db.sql"]
+  security-headers:
+    hsts_min_age: 15552000  # seconds; shorter max-age is reported
+    required:
+      - Strict-Transport-Security
+      - Content-Security-Policy
+      - X-Content-Type-Options
+  jquery:
+    min_version: "3.5.0"

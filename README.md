@@ -1,5 +1,7 @@
 # wp-security-checker
 
+[![CI](https://github.com/saizul/wp-security-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/saizul/wp-security-checker/actions/workflows/ci.yml) ![Python](https://img.shields.io/badge/Python-ready-blue?logo=python&logoColor=white) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+
 Passive, non-intrusive security checks for WordPress sites. Point it at a URL
 and get a prioritised list of exposed information, risky defaults and missing
 hardening, as a console table, JSON or a self-contained HTML report.

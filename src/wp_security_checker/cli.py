@@ -14,6 +14,7 @@ from .config import ConfigError, load_config
 from .models import Severity
 from .registry import load_builtin_checks, load_plugins
 from .report import render_table, to_html, to_json
+from .sarif import to_sarif_json
 from .scanner import ScanError, build_client, run_scan
 
 NOTICE = (
@@ -33,6 +34,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--config", help="YAML config file")
     p.add_argument("--json", action="store_true", help="print JSON instead of a table")
     p.add_argument("--html", metavar="PATH", help="also write an HTML report")
+    p.add_argument(
+        "--sarif", metavar="PATH", help="also write a SARIF 2.1.0 report (GitHub code scanning)"
+    )
+    p.add_argument(
+        "--sarif-location",
+        metavar="FILE",
+        default="README.md",
+        help="repository file that SARIF results point at (default README.md)",
+    )
     p.add_argument("--baseline", metavar="PATH", help="previous --json output to diff against")
     p.add_argument("--only", help="comma-separated check ids to run")
     p.add_argument("--skip", help="comma-separated check ids to skip")
@@ -93,6 +103,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                 handle.write(to_html(result, diff))
         except OSError as exc:
             print(f"error: cannot write {args.html}: {exc.strerror}", file=sys.stderr)
+            return 2
+    if args.sarif:
+        try:
+            with open(args.sarif, "w", encoding="utf-8") as handle:
+                handle.write(to_sarif_json(result, diff, args.sarif_location))
+        except OSError as exc:
+            print(f"error: cannot write {args.sarif}: {exc.strerror}", file=sys.stderr)
             return 2
     if args.json:
         print(to_json(result, diff))

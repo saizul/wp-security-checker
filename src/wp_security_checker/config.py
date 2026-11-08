@@ -85,8 +85,7 @@ def parse_config(data: Optional[Dict[str, Any]]) -> Config:
         if key != "user_agent" and value < 0:
             raise ConfigError(f"http.{key} must not be negative")
         setattr(http, key, value)
-    if http.timeout <= 0:
-        raise ConfigError("http.timeout must be greater than zero")
+    validate_http(http)
 
     checks: Dict[str, Dict[str, Any]] = {}
     raw_checks = data.get("checks", {})
@@ -107,6 +106,16 @@ def parse_config(data: Optional[Dict[str, Any]]) -> Config:
         else:
             raise ConfigError(f"checks.{check_id} must be a mapping or a boolean")
     return Config(http=http, checks=checks)
+
+
+def validate_http(http: HttpSettings) -> None:
+    """Reject out-of-range request settings (also used for command-line overrides)."""
+    if not http.timeout > 0:  # also rejects NaN
+        raise ConfigError("http.timeout must be greater than zero")
+    if not http.delay >= 0:
+        raise ConfigError("http.delay must not be negative")
+    if http.retries < 0:
+        raise ConfigError("http.retries must not be negative")
 
 
 def load_config(path: Optional[str]) -> Config:

@@ -70,6 +70,8 @@ Options: `--config`, `--json`, `--html PATH`, `--sarif PATH`,
 `--skip`, `--list-checks`, `--delay`, `--timeout`, `--retries`, `--fail-on`,
 `--version`.
 
+`--timeout` must be greater than 0 and `--delay` / `--retries` must not be negative; the same rules apply to the `http:` section of the config file.
+
 Exit codes: `0` success, `1` a finding at or above `--fail-on` exists (with
 `--baseline`, only **new** findings count), `2` usage, config or network error.
 

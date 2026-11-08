@@ -156,3 +156,14 @@ def test_full_scan_clean_site(mock, capsys):
     assert main(["example.com", "--json", *FAST]) == 0
     data = json.loads(capsys.readouterr().out)
     assert data["summary"]["failed"] == 0
+
+
+def test_cli_overrides_are_validated(capsys):
+    for flags, message in [
+        (["--timeout", "0"], "http.timeout must be greater than zero"),
+        (["--timeout", "-5"], "http.timeout must be greater than zero"),
+        (["--delay", "-1"], "http.delay must not be negative"),
+        (["--retries", "-1"], "http.retries must not be negative"),
+    ]:
+        assert main([BASE, *flags]) == 2
+        assert message in capsys.readouterr().err

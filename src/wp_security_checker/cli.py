@@ -10,7 +10,7 @@ from rich.console import Console
 
 from . import __version__
 from .baseline import BaselineError, diff_against, load_baseline
-from .config import ConfigError, load_config
+from .config import ConfigError, load_config, validate_http
 from .models import Severity
 from .registry import load_builtin_checks, load_plugins
 from .report import render_table, to_html, to_json
@@ -83,6 +83,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             value = getattr(args, name)
             if value is not None:
                 setattr(config.http, name, value)
+        validate_http(config.http)
         previous = load_baseline(args.baseline) if args.baseline else None
         err.print(f"[dim]{NOTICE}[/dim]")
         result = run_scan(

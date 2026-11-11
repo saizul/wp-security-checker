@@ -29,3 +29,10 @@ checks:
       - X-Content-Type-Options
   jquery:
     min_version: "3.5.0"
+  plugin-versions:
+    probe_readme: true      # request readme.txt of plugins seen on the home page
+    max_probes: 10          # at most this many readme.txt requests
+    ignore: ["hello-dolly"]
+    min_versions:           # report a detected version below these as outdated
+      woocommerce: "8.5.0"
+      theme/astra: "4.6.0"

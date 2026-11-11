@@ -31,6 +31,7 @@ hardening, as a console table, JSON or a self-contained HTML report.
 | ID | Family | What it looks at |
 | --- | --- | --- |
 | `wp-version` | disclosure | generator meta tag, `readme.html`, `?ver=` on core assets |
+| `plugin-versions` | disclosure | plugins and themes referenced by the home page, readable plugin `readme.txt`, versions below a configured minimum |
 | `xmlrpc` | surface | `xmlrpc.php` reachable (GET only) |
 | `rest-users` | users | `/wp-json/wp/v2/users` lists accounts |
 | `author-enum` | users | `?author=1` redirects to `/author/<login>/` |
@@ -116,6 +117,39 @@ Illustrative output from a mocked site:
 └────────┴──────────┴──────────────────────────────────────────────┴─────────────────────────────────────────────────┘
 Failed: 9 (0 critical, 1 high, 2 medium, 6 low) | Passed: 6
 ```
+
+## Plugin and theme inventory
+
+`plugin-versions` reads the asset URLs already present in the home page
+(`/wp-content/plugins/<slug>/...` and `/wp-content/themes/<slug>/...`) and builds an
+inventory from them. Nothing is guessed: a plugin that loads no asset on the home page is
+not listed. For each detected plugin it requests `readme.txt` once (only the first 4 KB are
+inspected, and nothing but the `Stable tag` is kept).
+
+| Finding | Severity | When |
+| --- | --- | --- |
+| Plugin version exposed: `<slug>` | low | the plugin's `readme.txt` is publicly readable |
+| Outdated plugin / theme: `<slug> <version>` | medium | the detected version is below `min_versions` |
+| Detected N plugin(s) and M theme(s) | pass | always, with the slugs and versions found |
+
+The version comes from `readme.txt` when it is readable and from the `?ver=` query string
+of the component's assets otherwise. Options:
+
+```yaml
+checks:
+  plugin-versions:
+    probe_readme: true      # false: build the inventory from the home page only
+    max_probes: 10          # upper limit of readme.txt requests per scan
+    ignore: ["hello-dolly", "theme/twentytwentyfour"]
+    min_versions:           # slug or plugin/<slug>, theme/<slug>
+      woocommerce: "8.5.0"
+      contact-form-7: "5.8.4"
+      theme/astra: "4.6.0"
+```
+
+Each finding has its own key (`plugin-versions:readme:<slug>`,
+`plugin-versions:outdated:plugin/<slug>`), so `--baseline` reports a newly exposed or newly
+outdated plugin on its own.
 
 ## GitHub code scanning (SARIF)
 

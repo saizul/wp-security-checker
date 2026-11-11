@@ -53,6 +53,7 @@ def test_builtin_checks_loaded():
         "https-redirect",
         "login-url",
         "jquery",
+        "plugin-versions",
     }
     assert expected <= set(reg.ids())
     assert len(reg.families()) >= 5

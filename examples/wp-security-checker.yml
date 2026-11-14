@@ -36,3 +36,9 @@ checks:
     min_versions:           # report a detected version below these as outdated
       woocommerce: "8.5.0"
       theme/astra: "4.6.0"
+  cookie-flags:
+    paths: ["", "wp-login.php"]   # "" is the home page
+    report_all: false             # true: check HttpOnly/SameSite on every cookie
+    ignore: []
+  server-banner:
+    min_php: "8.2"                # PHP below this is reported as unsupported

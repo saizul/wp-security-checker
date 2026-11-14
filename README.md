@@ -41,6 +41,8 @@ hardening, as a console table, JSON or a self-contained HTML report.
 | `https-redirect` | transport | `http://` redirects to `https://` |
 | `login-url` | surface | default `wp-login.php` reachable |
 | `jquery` | hardening | outdated jQuery referenced by the home page |
+| `cookie-flags` | hardening | `Secure`, `HttpOnly` and `SameSite` on cookies set by the home and login pages |
+| `server-banner` | disclosure | software versions in `Server` / `X-Powered-By` headers, end-of-life PHP |
 
 List them any time with `wp-security-check --list-checks`.
 
@@ -52,7 +54,7 @@ pip install .            # from a clone of this repository
 pip install -e ".[dev]"
 ```
 
-Requires Python 3.9+.
+Requires Python 3.10+.
 
 ## Usage
 
@@ -150,6 +152,43 @@ checks:
 Each finding has its own key (`plugin-versions:readme:<slug>`,
 `plugin-versions:outdated:plugin/<slug>`), so `--baseline` reports a newly exposed or newly
 outdated plugin on its own.
+
+## Cookie flags and server banners
+
+`cookie-flags` reads the `Set-Cookie` headers of the home page and `/wp-login.php` (both
+plain GETs, nothing is submitted). Cookie values are discarded on parsing and never appear
+in a report. When the same cookie is set by several pages, the weakest variant is reported.
+
+| Finding | Severity | When |
+| --- | --- | --- |
+| Secure flag missing: `<name>` | medium (session) / low | the site is HTTPS and the cookie lacks `Secure` |
+| HttpOnly flag missing: `<name>` | medium | a session cookie lacks `HttpOnly` |
+| SameSite attribute missing: `<name>` | low | a session cookie has no `SameSite` |
+| SameSite=None without Secure: `<name>` | low | any cookie; browsers reject it |
+
+Session cookies are the WordPress login cookies (`wordpress_logged_in_*`, `wordpress_sec_*`,
+`wordpress_<hash>`), `PHPSESSID` and the WooCommerce session and cart cookies. Other cookies
+are only checked for `Secure` unless `report_all` is on.
+
+`server-banner` looks at the headers the home page already returned (no extra request) and
+reports a version string such as `Apache/2.4.41` or `PHP/8.1.2` (low). A PHP version below
+`min_php` (default `8.2`, the oldest branch still getting security fixes) is reported as
+medium.
+
+```yaml
+checks:
+  cookie-flags:
+    paths: ["", "wp-login.php", "my-account/"]   # "" is the home page
+    report_all: false        # true: HttpOnly/SameSite for every cookie, not only sessions
+    session_patterns: ["^my_shop_session$"]      # extra regexes, case-insensitive
+    ignore: ["pll_language"]
+  server-banner:
+    min_php: "8.2"
+    headers: ["Server", "X-Powered-By"]           # default also covers X-AspNet-Version etc.
+```
+
+Finding keys are `cookie-flags:<name>:secure|httponly|samesite`, `server-banner:<Header>`
+and `server-banner:php-eol`, so `--baseline` tracks each one separately.
 
 ## GitHub code scanning (SARIF)
 

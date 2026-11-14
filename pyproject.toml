@@ -7,7 +7,7 @@ name = "wp-security-checker"
 version = "0.2.0"
 description = "Passive, non-intrusive security checks for WordPress sites you own."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Saizul Amin" }]
 keywords = ["wordpress", "security", "audit", "cli", "headers"]
@@ -45,7 +45,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
